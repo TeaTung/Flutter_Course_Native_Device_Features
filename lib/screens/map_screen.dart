@@ -31,14 +31,16 @@ class _MapScreenState extends State<MapScreen> {
     void _selectLocation(LatLng position) {
       setState(() {
         _pickedLocation = position;
+        if (_markers.length > 0) _markers.removeAt(0);
         _markers.add(Marker(
           width: 50.0,
           height: 50.0,
           point: _pickedLocation!,
           builder: (ctx) => Container(
-            child: FlutterLogo(),
+            child: Icon(Icons.add_location),
           ),
         ));
+        if (_actions.length > 0) _actions.removeAt(0);
         _actions.add(IconButton(
           icon: Icon(Icons.check),
           onPressed: () => Navigator.of(context).pop(_pickedLocation),
