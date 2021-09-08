@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:native_device_features/models/place.dart';
 import 'package:native_device_features/widgets/image_input.dart';
 import 'package:native_device_features/widgets/location_input.dart';
 import 'package:provider/provider.dart';
@@ -16,8 +17,13 @@ class AddPlaceScreen extends StatefulWidget {
 class _AddPlaceScreenState extends State<AddPlaceScreen> {
   final _titleController = TextEditingController();
   File? _pickedImage;
+  PlaceLocation? _pickedLocation;
   void _selectedImage(File pickedImage) {
     _pickedImage = pickedImage;
+  }
+
+  void _selectPlace(double latitude, double longitude) {
+    _pickedLocation = PlaceLocation(latitude: latitude, longitude: longitude);
   }
 
   void _savePlace() {
@@ -51,7 +57,7 @@ class _AddPlaceScreenState extends State<AddPlaceScreen> {
                     SizedBox(height: 10),
                     ImageInput(_selectedImage),
                     SizedBox(height: 10),
-                    LocationInput(),
+                    LocationInput(_selectPlace),
                   ],
                 ),
               ),

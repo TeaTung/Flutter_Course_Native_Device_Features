@@ -1,7 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:location/location.dart';
+import 'package:latlong2/latlong.dart';
+
+import '../helpers/location_helper.dart';
+import '../screens/map_screen.dart';
 
 class LocationInput extends StatefulWidget {
-  const LocationInput({Key? key}) : super(key: key);
+  final Function onSelectPlace;
+
+  LocationInput(this.onSelectPlace);
 
   @override
   _LocationInputState createState() => _LocationInputState();
@@ -10,6 +17,42 @@ class LocationInput extends StatefulWidget {
 class _LocationInputState extends State<LocationInput> {
   String? _previewImageUrl;
 
+  Future<void> _showPreview(double latitude, double longitude) async {
+    final previewUrl = LocationHelper.generatePreview(
+      latitude: latitude,
+      longitude: longitude,
+    );
+    setState(() {
+      _previewImageUrl = previewUrl;
+    });
+  }
+
+  Future<void> _getCurrentUserLocation() async {
+    try {
+      final locData = await Location().getLocation();
+      _showPreview(locData.latitude!, locData.longitude!);
+      widget.onSelectPlace(locData.latitude, locData.longitude);
+    } catch (error) {
+      print(error);
+      return;
+    }
+  }
+
+  Future<void> _selectOnMap() async {
+    final selectedLocation =
+        await Navigator.of(context).push<LatLng>(MaterialPageRoute(
+            fullscreenDialog: true,
+            builder: (ctx) => MapScreen(
+                  isSelecting: true,
+                )));
+    if (selectedLocation == null) {
+      return;
+    }
+    //print(selectedLocation);
+    _showPreview(selectedLocation.latitude, selectedLocation.longitude);
+    widget.onSelectPlace(selectedLocation.latitude, selectedLocation.longitude);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -17,46 +60,35 @@ class _LocationInputState extends State<LocationInput> {
         Container(
           height: 170,
           width: double.infinity,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            border: Border.all(
-              width: 1,
-              color: Colors.grey,
-            ),
-          ),
+          decoration:
+              BoxDecoration(border: Border.all(width: 1, color: Colors.grey)),
           child: _previewImageUrl == null
-              ? Text(
-                  'No Location Picked',
-                  textAlign: TextAlign.center,
+              ? Center(
+                  child: Text('No Location Chosen'),
                 )
-              : Image.network(_previewImageUrl!,
-                  fit: BoxFit.cover, width: double.infinity),
+              : Image.network(
+                  _previewImageUrl!,
+                  fit: BoxFit.cover,
+                  width: double.infinity,
+                ),
         ),
+        SizedBox(height: 5),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            FlatButton.icon(
-              icon: Icon(
-                Icons.location_on,
-              ),
-              label: Text(
-                'Current Location',
-              ),
-              textColor: Theme.of(context).primaryColor,
-              onPressed: () {},
+            TextButton.icon(
+              icon: Icon(Icons.location_on),
+              label: Text('Current Location'),
+              onPressed: _getCurrentUserLocation,
             ),
-            FlatButton.icon(
-              icon: Icon(
-                Icons.map,
-              ),
-              label: Text(
-                'Select on Map',
-              ),
-              textColor: Theme.of(context).primaryColor,
-              onPressed: () {},
-            ),
+            SizedBox(width: 20),
+            TextButton.icon(
+              icon: Icon(Icons.map),
+              label: Text('Select on Map'),
+              onPressed: _selectOnMap,
+            )
           ],
-        ),
+        )
       ],
     );
   }
